@@ -1,0 +1,127 @@
+#!/usr/bin/python -OOtt
+# -*- coding: utf-8 -*-
+
+from PyQt4 import QtCore, QtGui
+from test_ui import Ui_MainWindow
+from PyQt4.QtNetwork import *
+
+class MainTest(Ui_MainWindow):
+
+    def __init__(self, *args, **kwargs):
+        super(MainTest, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.retranslateUi(self)
+
+        # connect hide button
+        self.button.clicked.connect(self.do_hide)
+
+        # listen for network connections
+        self.addr = QHostAddress.Any
+        self.port = 8000
+
+        self.tcpServer = QTcpServer(self)
+        self.tcpServer.listen(self.addr, self.port)
+        self.tcpServer.newConnection.connect(self.do_show)
+        print "="*42
+        print "Listening on all network interfaces on port %s" % self.port
+        print "Connect to me at this port to cause window to show"
+        print "Example:  nc 127.0.0.1 8000"
+        print "="*42
+
+    def launch(self, cmd):
+        # setup embeded container
+        self.container = QtGui.QX11EmbedContainer()
+        self.verticalLayout.addWidget(self.container)
+        self.container.show()
+
+        # start process
+        self.proc = QtCore.QProcess()
+        self.proc.start(cmd)
+        self.proc.waitForStarted()
+
+        # wait some time for window to get created before getting window id
+        from time import sleep
+        sleep(0.3)
+
+        # get window id from self.proc
+        self.p = QtCore.QProcess()
+        self.p.readyReadStandardOutput.connect(self.p_stdoutReady)
+        self.p.start(os.getcwd()+'/getid')
+
+
+    def p_stdoutReady(self):
+        winid = str(self.p.readAllStandardOutput()).strip()
+        self.container.embedClient(int(winid))
+
+
+    def do_pixmap_paint_save(self, fout, size=4096, text='Qt > Gtk'):
+        """test pixmap painting and saving without showing"""
+        self.pixmap  = QtGui.QPixmap (QtCore.QSize(size,size))    
+        painter = QtGui.QPainter (self.pixmap)
+        gradient = QtGui.QLinearGradient(QtCore.QPointF(self.pixmap.rect().topLeft()),
+                            QtCore.QPointF(self.pixmap.rect().bottomLeft()))    
+        gradient.setColorAt(0,   QtCore.Qt.blue)
+        gradient.setColorAt(0.4, QtCore.Qt.yellow)
+        gradient.setColorAt(1,   QtCore.Qt.black)    
+
+        brush = QtGui.QBrush(gradient)        
+
+        painter.fillRect(QtCore.QRectF(0, 0, size, size), brush)
+        painter.drawText(QtCore.QRectF(0, 0, size, size), QtCore.Qt.AlignCenter, text)
+        self.pixmap.save(fout)
+
+        return
+
+
+    def do_pixmap_load_save(self, fin, fout):
+        """test loading and saving a pixmap"""
+        self.pixmap = QtGui.QPixmap(fin)
+        win.label.setPixmap(self.pixmap)
+        win.label.self.pixmap().save(fout)
+
+
+    def do_show(self):
+        self.show()
+
+
+    def do_hide(self):
+        # kill embeded process
+        self.proc.terminate()
+
+        # hide main window
+        self.hide()
+
+        # change label after hiding
+        self.label.setText("Changed after hidden")
+
+
+if __name__ == '__main__':
+    import sys, os
+    app = QtGui.QApplication(sys.argv)
+    win = MainTest()
+
+    # use gtk window style
+    #win.setStyle(QtGui.QStyleFactory.create('Default'))
+
+    # launch process within a QX11EmbededContainer
+    #try:
+    #    win.launch(sys.argv[1])
+    #except:
+    #    win.launch('gtk-demo')
+
+    # load & save a pixmap
+    #for i in range(0,1000):
+    #    win.do_pixmap_load_save('input.png', 'output/load_%s.png' % i)
+
+
+    # test painting and saving
+    timer = QtCore.QElapsedTimer()
+    timer.start()
+
+    num = 10
+    for i in range(0,num):
+        win.do_pixmap_paint_save('output/paint_%s.png' % i)
+        print timer.elapsed()
+    print "%s pixmaps painted and saved in %s seconds" % (num, timer.elapsed()/1000)
+    sys.exit(app.exec_())
+

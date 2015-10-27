@@ -1,0 +1,4 @@
+#!/bin/bash
+# Window id for 'gtk-demo'
+xwininfo -int -name 'GTK+ Code Demos' | head -n2 | tail -n1 | awk '{print $4}'
+
