@@ -12,7 +12,7 @@
 
 <strong>win.show() is never called unless you connect to the tcp socket server, so this is also a test of QTcpServer.</strong>
 
-* I did it this way because chicken-egg. Only the connect signal is implemented so you have a way to show the window after running it.
+* I did it this way because chicken-egg. Only the connect signal is implemented so you have a way to show the window after running it. This way you can inspect the output files and remotely interact with your spawned gtk app (if that's something your gtk app can do) before show is ever called.
 * netcat would be a simple way to test this, for example: <i>nc 127.0.0.1 8000</i>
 
 <strong>All of the tests are run from the main. You may need to uncomment the method calls because it would be checked in with some commented out as I was testing one at a time in the end.</strong>
