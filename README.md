@@ -1,5 +1,7 @@
 # gtk_in_qt
 
+![input pixmap](https://github.com/admica/gtk_in_qt/blob/master/input.png)
+
 Testing Running Gtk apps within Qt containers.
 
 * This is a qt application process spawning a seperate process to run a gtk app and devouring the gtk processes window ID to contain the whole process. This allows Qt to have complete control over the gtk app and see all events, mouse, keyboard, etc.
